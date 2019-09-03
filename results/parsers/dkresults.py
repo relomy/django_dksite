@@ -1,18 +1,18 @@
 import datetime
 import decimal
+import io
 import os
-from pathlib import Path
 import re
 import zipfile
 from csv import reader
+from pathlib import Path
 
+import browsercookie
 import requests
 from bs4 import BeautifulSoup
-import browsercookie
 
-from results.models import DKContest, DKContestPayout, Player #  DKResult
-
-# from nba.utils import get_date_yearless
+from results.models import DKContest, DKContestPayout, DKResult, Player
+from results.utils import get_date_yearless
 
 STOP_WORDS = set(["PG", "SG", "SF", "PF", "C", "F", "G", "UTIL"])
 
@@ -135,25 +135,45 @@ def run(contest_ids=[], contest=True, resultscsv=True, resultsparse=True):
         # update referer
         HEADERS["referer"] = url
 
-        OUTFILE = "out.zip"
+        # OUTFILE = "out.zip"
+        filename = CSVPATH / f"contest-standings-{contest_id}.csv"
 
         def read_response(response):
-            print(f"Downloading and unzipping file from {response.url}")
-            with open(OUTFILE, "wb") as f:
-                for chunk in response.iter_content(chunk_size=1024):
-                    if chunk:
-                        f.write(chunk)
+            print(f"Downloading file from {response.url}")
 
-        def unzip_data():
-            with open(OUTFILE, "rb") as f:
-                z = zipfile.ZipFile(f)
+            if response.headers["Content-Length"] == "0":
+                print("Content-Length is empty - returning False")
+                return False
+
+            if "text/html" in response.headers["Content-Type"]:
+                return False
+            elif response.headers["Content-Type"] == "text/csv":
+                with open(filename, "w", newline="") as f:
+                    f.writelines(response.content.decode("utf-8"))
+                return True
+            else:
+                z = zipfile.ZipFile(io.BytesIO(response.content))
                 for name in z.namelist():
                     z.extract(name, CSVPATH)
+                return True
+                # with open(OUTFILE, "wb") as f:
+                #     for chunk in response.iter_content(chunk_size=1024):
+                #         if chunk:
+                #             f.write(chunk)
+
+        # def unzip_data():
+        #     with open(OUTFILE, "rb") as f:
+        #         z = zipfile.ZipFile(f)
+        #         for name in z.namelist():
+        #             z.extract(name, CSVPATH)
 
         try:
             export_url = url.replace("gamecenter", "exportfullstandingscsv")
-            read_response(requests.get(export_url, headers=HEADERS, cookies=COOKIES))
-            unzip_data()
+            return read_response(
+                requests.get(export_url, headers=HEADERS, cookies=COOKIES)
+            )
+
+            # unzip_data()
         except zipfile.BadZipfile:
             print(f"Couldn't download/extract CSV zip for {contest_id}")
 
@@ -168,10 +188,11 @@ def run(contest_ids=[], contest=True, resultscsv=True, resultsparse=True):
             else:
                 return Player.get_by_name(name)
 
-        player_cache = {p.full_name: p for p in Player.objects.all() if p.full_name}
+        # player_cache = {p.full_name: p for p in Player.objects.all() if p.full_name}
+        player_cache = {p.name: p for p in Player.objects.all() if p.name}
 
         contest, _ = DKContest.objects.get_or_create(dk_id=contest_id)
-        filename = "{}/contest-standings-{}}.csv".format(CSVPATH, contest_id)
+        filename = CSVPATH / f"contest-standings-{contest_id}.csv"
         try:
             with open(filename, "r") as f:
                 csvreader = reader(f, delimiter=",", quotechar='"')
@@ -197,14 +218,14 @@ def run(contest_ids=[], contest=True, resultscsv=True, resultsparse=True):
                                     "name": parse_entry_name(entry_name),
                                     "rank": rank,
                                     "points": points,
-                                    "pg": players[0],
-                                    "sg": players[1],
-                                    "sf": players[2],
-                                    "pf": players[3],
-                                    "c": players[4],
-                                    "g": players[5],
-                                    "f": players[6],
-                                    "util": players[7],
+                                    # "pg": players[0],
+                                    # "sg": players[1],
+                                    # "sf": players[2],
+                                    # "pf": players[3],
+                                    # "c": players[4],
+                                    # "g": players[5],
+                                    # "f": players[6],
+                                    # "util": players[7],
                                 },
                             )
                     if i % 5000 == 0:
@@ -217,6 +238,8 @@ def run(contest_ids=[], contest=True, resultscsv=True, resultsparse=True):
             get_contest_data(contest_id)
             get_contest_prize_data(contest_id)
         if resultscsv:
-            get_contest_result_data(contest_id)
+            # get_contest_result_data returns false if empty
+            if get_contest_result_data(contest_id) is False:
+                continue
         if resultsparse:
             parse_contest_result_csv(contest_id)

@@ -28,8 +28,6 @@ HEADERS = {
 }
 
 
-
-
 def write_salaries_to_db(
     input_rows, sport, draft_group_id, contest_type_id, date=datetime.date.today()
 ):

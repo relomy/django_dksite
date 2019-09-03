@@ -64,3 +64,49 @@ class DKContestPayout(models.Model):
         return "{{}} ({} - {}: {})".format(
             self.contest, self.upper_rank, self.lower_rank, self.payout
         )
+
+
+class DKResult(models.Model):
+    contest = models.ForeignKey(
+        DKContest, related_name="results", on_delete=models.PROTECT
+    )
+    dk_id = models.CharField(max_length=15, unique=True)
+    name = models.CharField(max_length=50)
+    rank = models.PositiveIntegerField()
+    points = models.FloatField()
+    # pg = models.ForeignKey(
+    #     Player, related_name="dk_pg_results", on_delete=models.PROTECT
+    # )
+    # sg = models.ForeignKey(
+    #     Player, related_name="dk_sg_results", on_delete=models.PROTECT
+    # )
+    # sf = models.ForeignKey(
+    #     Player, related_name="dk_sf_results", on_delete=models.PROTECT
+    # )
+    # pf = models.ForeignKey(
+    #     Player, related_name="dk_pf_results", on_delete=models.PROTECT
+    # )
+    # c = models.ForeignKey(Player, related_name="dk_c_results", on_delete=models.PROTECT)
+    # g = models.ForeignKey(Player, related_name="dk_g_results", on_delete=models.PROTECT)
+    # f = models.ForeignKey(Player, related_name="dk_f_results", on_delete=models.PROTECT)
+    # util = models.ForeignKey(
+    #     Player, related_name="dk_util_results", on_delete=models.PROTECT
+    # )
+
+    # def get_lineup(self):
+    #     return [self.pg, self.sg, self.sf, self.pf, self.c, self.g, self.f, self.util]
+
+    # def get_lineup_dict(self):
+    #     return {
+    #         "PG": self.pg,
+    #         "SG": self.sg,
+    #         "SF": self.sf,
+    #         "PF": self.pf,
+    #         "C": self.c,
+    #         "G": self.g,
+    #         "F": self.f,
+    #         "UTIL": self.util,
+    #     }
+
+    def __str__(self):
+        return "%s %s" % (unicode(self.contest), unicode(self.rank))
