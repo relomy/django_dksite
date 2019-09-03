@@ -20,20 +20,18 @@ def get_datetime_yearless(datestr):
     )
 
 
-def get_empty_contest_ids():
+def get_empty_contest_ids(sport):
     """
     Returns a list of contest ids for contests that are missing results data
     """
     contest_ids = []
     today = datetime.date.today()
     last = today - datetime.timedelta(days=7)
-    contests = DKContest.objects.filter(date__gte=last)
+    contests = DKContest.objects.filter(date__gte=last, sport__exact=sport)
     for contest in contests:
         num_results = contest.results.count()
         print(
-            "{} entries expected for {}, {} found".format(
-                contest.entries, contest.name, num_results
-            )
+            f"{contest.entries} entries expected for {contest.name} [{contest.date}], {num_results} found"
         )
         if num_results == 0:
             contest_ids.append(contest.dk_id)

@@ -41,18 +41,19 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        sport = options["sport"]
         if options["update"]:
-            # dksalaries_parser.find_new_contests()
+            dkcontests_parser.find_new_contests(sport)
             # injury_parser.run()
-            # dksalaries_parser.run()
+            dksalaries_parser.run(sport)
             dkresults_parser.run(
-                contest_ids=get_empty_contest_ids(),
+                contest_ids=get_empty_contest_ids(sport),
                 contest=True,
                 resultscsv=True,
                 resultsparse=True,
             )
         else:
             if options["dk_salaries"]:
-                dksalaries_parser.run(options["sport"])
+                dksalaries_parser.run(sport)
             if options["dk_new_contests"]:
-                dkcontests_parser.find_new_contests(options["sport"])
+                dkcontests_parser.find_new_contests(sport)

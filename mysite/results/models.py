@@ -27,12 +27,19 @@ class DKSalary(models.Model):
         Player, related_name="dk_salaries", on_delete=models.PROTECT
     )
     salary = models.PositiveIntegerField(null=True, blank=True)
-    draft_group = models.PositiveIntegerField(null=True, blank=True)
+    draft_group_id = models.PositiveIntegerField(null=True, blank=True)
+    contest_type_id = models.PositiveIntegerField(null=True, blank=True)
     sport = models.CharField(max_length=10, null=True, blank=True)
     date = models.DateField(null=True, blank=True)
 
     class Meta:
-        unique_together = ("player", "date")
+        # unique_together = ("player", "date")
+        unique_together = ("player", "draft_group_id")
+
+    def __str__(self):
+        return "DKSalary: player: {} salary: {} dg: {}".format(
+            self.player, self.salary, self.draft_group_id
+        )
 
 
 class DKContest(models.Model):

@@ -59,7 +59,6 @@ class Contest:
 def get_largest_contest(contests, entry_fee=25, query=None, exclude=None):
     """Return largest contest from a list of Contests."""
     print("contests size: {}".format(len(contests)))
-    contest_list = []
 
     # add contest to list if it matches criteria
     contest_list = [
@@ -136,12 +135,19 @@ def find_new_contests(sport):
     #     get_largest_contest(response["Contests"], 27),
     # ] + get_contests_by_entries(response["Contests"], 3, 50000)
     target_contests = []
-    for entry_fee in [5, 10, 25, 50]:
+    entry_fees = []
+    if sport == "NFL":
+        entry_fees = [5, 10, 25, 50]
+    else:
+        entry_fees = [10, 25]
+
+    for entry_fee in entry_fees:
         largest_contest = get_largest_contest(contests, entry_fee=entry_fee)
-        # check if c is None
-        if largest_contest:
+        # check if largest_contest is None
+        if largest_contest is not None:
             print(f"Appending contest {largest_contest}")
             target_contests.append(largest_contest)
+
     for contest in target_contests:
         date_time = contest.start_dt
         # make naive datetime aware based on django settings
