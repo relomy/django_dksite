@@ -1,4 +1,4 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 import results.parsers.dkcontests as dkcontests_parser
 import results.parsers.dkresults as dkresults_parser

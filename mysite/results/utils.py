@@ -1,10 +1,8 @@
 import datetime
-import re
-import time
 from results.models import DKContest
 
 
-def get_date_yearless(datestr):
+def get_datetime_yearless(datestr):
     """
     Return a date from a datestring. Make sure that it wraps around to the
     previous year if the datestring is greater than the current date (e.g.
@@ -61,9 +59,9 @@ def get_contest_ids(limit=1, entry_fee=None):
     return contest_ids
 
 
-class Timer:
-    @classmethod
-    def log_elapsed_time(cls, s, prev_time):
-        curr_time = time.time()
-        print("[Elapsed time] {}: {}".format(s, curr_time - prev_time))
-        return curr_time
+# class Timer:
+#     @classmethod
+#     def log_elapsed_time(cls, s, prev_time):
+#         curr_time = time.time()
+#         print("[Elapsed time] {}: {}".format(s, curr_time - prev_time))
+#         return curr_time

@@ -1,7 +1,5 @@
-import csv
 import datetime
 import re
-from pathlib import Path
 
 import browsercookie
 import requests
@@ -114,11 +112,6 @@ def get_contests(url):
     return response_contests
 
 
-def get_dt_from_timestamp(timestamp_str):
-    timestamp = float(re.findall(r"[^\d]*(\d+)[^\d]*", timestamp_str)[0])
-    return datetime.datetime.fromtimestamp(timestamp / 1000)
-
-
 def find_new_contests(sport):
     """
     Maybe this belongs in another module
@@ -144,11 +137,11 @@ def find_new_contests(sport):
     # ] + get_contests_by_entries(response["Contests"], 3, 50000)
     target_contests = []
     for entry_fee in [5, 10, 25, 50]:
-        c = get_largest_contest(contests, entry_fee=entry_fee)
+        largest_contest = get_largest_contest(contests, entry_fee=entry_fee)
         # check if c is None
-        if c:
-            print(f"Appending contest {c}")
-            target_contests.append(c)
+        if largest_contest:
+            print(f"Appending contest {largest_contest}")
+            target_contests.append(largest_contest)
     for contest in target_contests:
         date_time = contest.start_dt
         # make naive datetime aware based on django settings

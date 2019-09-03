@@ -1,7 +1,6 @@
 import datetime
 import decimal
 import io
-import os
 import re
 import zipfile
 from csv import reader
@@ -12,7 +11,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from results.models import DKContest, DKContestPayout, DKResult, Player
-from results.utils import get_date_yearless
+from results.utils import get_datetime_yearless
 
 STOP_WORDS = set(["PG", "SG", "SF", "PF", "C", "F", "G", "UTIL"])
 
@@ -35,7 +34,7 @@ HEADERS = {
 }
 
 
-def run(contest_ids=[], contest=True, resultscsv=True, resultsparse=True):
+def run(contest_ids, contest=True, resultscsv=True, resultsparse=True):
     """
     Downloads and unzips the CSV results and then populates the database
     """
@@ -53,12 +52,13 @@ def run(contest_ids=[], contest=True, resultscsv=True, resultsparse=True):
             @return [datetime.date]
             """
             if "," in datestr:
-                return get_date_yearless(datestr.split(",")[0])
-            else:
-                datenum = datestr.split(" ")[0]
-                month, day = [int(s) for s in datenum.split("/")]
-                monthstr = datetime.date(1900, month, 1).strftime("%b")
-                return get_date_yearless("%s %s" % (monthstr, day))
+                return get_datetime_yearless(datestr.split(",")[0])
+
+            # massage
+            datenum = datestr.split(" ")[0]
+            month, day = [int(s) for s in datenum.split("/")]
+            monthstr = datetime.date(1900, month, 1).strftime("%b")
+            return get_datetime_yearless(f"{monthstr} {day}")
 
         url = f"https://www.draftkings.com/contest/gamecenter/{contest_id}"
 
@@ -97,17 +97,17 @@ def run(contest_ids=[], contest=True, resultscsv=True, resultsparse=True):
             print(f"Couldn't find DK contest with id {contest_id}")
 
     def get_contest_prize_data(contest_id):
-        def place_to_number(s):
-            return int(re.findall(r"\d+", s)[0])
+        def place_to_number(place):
+            return int(re.findall(r"\d+", place)[0])
 
         url = "https://www.draftkings.com/contest/detailspop"
-        PARAMS = {
+        params = {
             "contestId": contest_id,
             "showDraftButton": False,
             "defaultToDetails": True,
             "layoutType": "legacy",
         }
-        response = requests.get(url, headers=HEADERS, cookies=COOKIES, params=PARAMS)
+        response = requests.get(url, headers=HEADERS, cookies=COOKIES, params=params)
         soup = BeautifulSoup(response.text, "html5lib")
 
         try:
@@ -148,13 +148,13 @@ def run(contest_ids=[], contest=True, resultscsv=True, resultsparse=True):
             if "text/html" in response.headers["Content-Type"]:
                 return False
             elif response.headers["Content-Type"] == "text/csv":
-                with open(filename, "w", newline="") as f:
-                    f.writelines(response.content.decode("utf-8"))
+                with open(filename, "w", newline="") as file:
+                    file.writelines(response.content.decode("utf-8"))
                 return True
             else:
-                z = zipfile.ZipFile(io.BytesIO(response.content))
-                for name in z.namelist():
-                    z.extract(name, CSVPATH)
+                zfile = zipfile.ZipFile(io.BytesIO(response.content))
+                for name in zfile.namelist():
+                    zfile.extract(name, CSVPATH)
                 return True
                 # with open(OUTFILE, "wb") as f:
                 #     for chunk in response.iter_content(chunk_size=1024):
@@ -185,8 +185,8 @@ def run(contest_ids=[], contest=True, resultscsv=True, resultsparse=True):
             if name in player_cache:
                 result = player_cache[name]
                 return result
-            else:
-                return Player.get_by_name(name)
+            # else:
+            #     return Player.get_by_name(name)
 
         # player_cache = {p.full_name: p for p in Player.objects.all() if p.full_name}
         player_cache = {p.name: p for p in Player.objects.all() if p.name}
@@ -194,8 +194,8 @@ def run(contest_ids=[], contest=True, resultscsv=True, resultsparse=True):
         contest, _ = DKContest.objects.get_or_create(dk_id=contest_id)
         filename = CSVPATH / f"contest-standings-{contest_id}.csv"
         try:
-            with open(filename, "r") as f:
-                csvreader = reader(f, delimiter=",", quotechar='"')
+            with open(filename, "r") as file:
+                csvreader = reader(file, delimiter=",", quotechar='"')
                 for i, row in enumerate(csvreader):
                     # Rank, EntryId, EntryName, TimeRemaining, Points, Lineup
                     if i != 0:
@@ -204,7 +204,7 @@ def run(contest_ids=[], contest=True, resultscsv=True, resultsparse=True):
                         for wordidx, word in enumerate(lineup[:]):
                             if word in STOP_WORDS:
                                 lineup[wordidx] = "\t"
-                        word_list = " ".join(lineup).split("\t")
+                        # word_list = " ".join(lineup).split("\t")
                         players = [
                             get_player_cached(word.strip(), player_cache)
                             for word in " ".join(lineup).split("\t")

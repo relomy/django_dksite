@@ -61,7 +61,7 @@ class DKContestPayout(models.Model):
         unique_together = ("contest", "upper_rank", "lower_rank")
 
     def __str__(self):
-        return "{{}} ({} - {}: {})".format(
+        return "{} ({} - {}: {})".format(
             self.contest, self.upper_rank, self.lower_rank, self.payout
         )
 
@@ -109,4 +109,4 @@ class DKResult(models.Model):
     #     }
 
     def __str__(self):
-        return "%s %s" % (unicode(self.contest), unicode(self.rank))
+        return f"{self.contest} {self.rank}"
