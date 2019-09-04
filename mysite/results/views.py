@@ -14,7 +14,7 @@ def index(request):
 def detail(request, contest_id):
     try:
         contest = DKContest.objects.get(pk=contest_id)
-        results = contest.results.all()
+        results = contest.results.order_by("rank")
     except contest.DoesNotExist:
         raise Http404("DKContest does not exist")
     return render(
