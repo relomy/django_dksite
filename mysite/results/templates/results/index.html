@@ -1,0 +1,9 @@
+{% if latest_contests %}
+    <ul>
+    {% for contest in latest_contests %}
+        <li><a href="/results/{{ contest.id }}/">{{ contest.name }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No contests are available.</p>
+{% endif %}

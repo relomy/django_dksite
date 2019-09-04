@@ -55,6 +55,9 @@ class DKContest(models.Model):
     entry_fee = models.FloatField(null=True, blank=True)
     positions_paid = models.PositiveIntegerField(null=True, blank=True)
 
+    def __str__(self):
+        return f"{self.name} ({self.date})"
+
 
 class DKContestPayout(models.Model):
     contest = models.ForeignKey(
