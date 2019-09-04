@@ -5,7 +5,6 @@ from pathlib import Path
 
 import browsercookie
 import requests
-from django.utils.timezone import make_aware
 
 from results.models import DKSalary, Player
 
