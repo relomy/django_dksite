@@ -4,7 +4,7 @@ from . import views
 
 urlpatterns = [
     # ex: /results/
-    path("", views.index, name="index"),
+    path("", views.index, name="results-index"),
     # ex /results/dkcontests
     # path("dkcontests", views.index, name="index"),
     # ex: /polls/5/

@@ -1,3 +1,4 @@
+{% extends 'results/base.html' %}
 {% load results_tags %}
 {% comment %}
 {{ contest }}
@@ -22,24 +23,31 @@
     <p>No results are available for contest.</p>
 {% endif %}
 {% endcomment %}
-{% if ownership %}
-    <table>
-    <thead>
-        <tr>
-            <th>Player</th>
-            <th>Pos</th>
-            <th>Ownership</th>
-            <th>Points</th>
-        </tr>
-    </thead>
-    <tbody>
-    {% for row in ownership %}
-        <tr>
-            <td>{{ row.player.name }}</td><td>{{ row.player.position }}</td><td>{{ row.ownership|percentage }}</td><td>{{ row.fpts }}</td>
-        </tr>
-    {% endfor %}
-    </tbody>
-    </table>
-{% else %}
-    <p>No ownership information is available for contest.</p>
-{% endif %}
+{% block content %}
+    {% if ownership %}
+        <table id="results" class="table table-hover table-striped table-sm">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">Player</th>
+                <th scope="col">Pos</th>
+                <th scope="col">Ownership</th>
+                <th scope="col">Points</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in ownership %}
+            <tr>
+                <td>{{ row.player.name }}</td>
+                <td>{{ row.player.position }}</td>
+                <td>{{ row.ownership|percentage }}</td>
+                <td>{{ row.fpts }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+    {% else %}
+        <p>No ownership information is available for contest.</p>
+    {% endif %}
+    
+    
+{% endblock content %}
