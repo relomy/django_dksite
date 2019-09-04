@@ -41,6 +41,15 @@ class Command(BaseCommand):
             help="Fetch contest result data from draftkings.com by id",
         )
         parser.add_argument(
+            "--dk-results-limit",
+            "-rl",
+            action="store",
+            type=int,
+            dest="dk_results_limit",
+            default=-1,
+            help="Fetch contest result data from draftkings.com by previous",
+        )
+        parser.add_argument(
             "--update",
             "-u",
             action="store_true",
@@ -77,4 +86,15 @@ class Command(BaseCommand):
                     # contest=options["dk_results_contest"],
                     # resultscsv=options["dk_results_csv"],
                     # resultsparse=options["dk_results_parse"],
+                )
+            if options["dk_results_limit"] > -1:
+                dkresults_parser.run(
+                    sport=sport,
+                    contest_ids=get_contest_ids(sport, options["dk_results_limit"]),
+                    # contest=options["dk_results_contest"],
+                    # resultscsv=options["dk_results_csv"],
+                    # resultsparse=options["dk_results_parse"],
+                    contest=True,
+                    resultscsv=True,
+                    resultsparse=True,
                 )
