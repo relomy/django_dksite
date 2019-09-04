@@ -1,5 +1,7 @@
 from django.db import models
 
+import unicodedata
+
 # Create your models here.
 # class Salary(models.Model):
 #     pos = models.CharField(max_length=10)
@@ -20,6 +22,44 @@ class Player(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @classmethod
+    def get_by_name(cls, name):
+        # try getting exactly the name (case-insensitive)
+        try:
+            return cls.objects.get(name__iexact=name)
+        except (cls.DoesNotExist, cls.MultipleObjectsReturned) as ex:
+            print(
+                f"Exception in Player.get_by_name({name}): {ex}. Trying to remove accents"
+            )
+
+        # try getting exactly the name (case-insensitive) without accents
+        try:
+            return cls.objects.get(name__iexact=Player.strip_accents(name))
+        except (cls.DoesNotExist, cls.MultipleObjectsReturned) as ex:
+            print(
+                f"Exception in Player.get_by_name({name}): {ex}. Trying name__contains"
+            )
+
+        # try contains
+        try:
+            return cls.objects.get(name__contains=name)
+        except (cls.DoesNotExist, cls.MultipleObjectsReturned) as ex:
+            raise Exception(f"Exception in Player.get_by_name: {ex}")
+            # return cls.get_by_name_slow(name)
+
+    @staticmethod
+    def strip_accents(name):
+        """Strip accents from a given string and replace with letters without accents."""
+        return "".join(
+            # c.replace(".", "")
+            c
+            for c in unicodedata.normalize("NFD", name)
+            if unicodedata.category(c) != "Mn"
+        )
+
+    def __str__(self):
+        return f"({self.name}, {self.sport}, {self.position})"
 
 
 class DKSalary(models.Model):
@@ -120,3 +160,21 @@ class DKResult(models.Model):
 
     def __str__(self):
         return f"{self.contest} {self.rank}"
+
+
+class DKResultOwnership(models.Model):
+    contest = models.ForeignKey(
+        DKContest, related_name="ownership", on_delete=models.PROTECT
+    )
+    player = models.ForeignKey(
+        Player, related_name="player_ownership", on_delete=models.PROTECT
+    )
+    # dk_id = models.CharField(max_length=15, unique=True)
+    ownership = models.FloatField()
+    fpts = models.DecimalField(max_digits=18, decimal_places=2, null=True, blank=True)
+
+    class Meta:
+        unique_together = ("contest", "player")
+
+    def __str__(self):
+        return f"{self.contest} - {self.player} - {self.ownership} - {self.fpts}"
