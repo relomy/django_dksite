@@ -147,7 +147,10 @@ def matches_bad_criteria(sport, tag, suffix, draft_group_id, contest_type_id):
     if tag != "Featured":
         reason = "it's not featured"
 
-    if suffix:
+    if suffix is None:
+        # a None suffix seems to be our key contest type
+        return False
+    else:
         if "Tiers" in suffix:
             reason = "'Tiers' in suffix"
         elif regex.search(suffix):
@@ -165,6 +168,7 @@ def matches_bad_criteria(sport, tag, suffix, draft_group_id, contest_type_id):
             f"type: {contest_type_id} because {reason}"
         )
         return True
+
     return False
 
 
@@ -188,7 +192,14 @@ def run(sport, writecsv=True):
         draft_group_id = dg["DraftGroupId"]
         contest_type_id = dg["ContestTypeId"]
         # only care about featured draftgroups and exclude tiers
-        if matches_bad_criteria(sport, tag, suffix, draft_group_id, contest_type_id):
+        # if matches_bad_criteria(sport, tag, suffix, draft_group_id, contest_type_id):
+        #     continue
+
+        if tag != "Featured" or suffix is not None:
+            print(
+                f"Skipping {sport} [{date}]: draft group {draft_group_id}"
+                f"contest type {contest_type_id} [suffix: {suffix}]"
+            )
             continue
 
         print(
