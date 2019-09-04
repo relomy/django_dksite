@@ -1,3 +1,5 @@
+{% load results_tags %}
+{% comment %}
 {{ contest }}
 {% if results %}
     <table>
@@ -11,11 +13,33 @@
     <tbody>
     {% for result in results %}
         <tr>
-        <td>{{ result.name }}</td><td>{{ result.rank }}</td><td>{{ result.points }}</td>
+            <td>{{ result.name }}</td><td>{{ result.rank }}</td><td>{{ result.points }}</td>
         </tr>
     {% endfor %}
     </tbody>
     </table>
 {% else %}
     <p>No results are available for contest.</p>
+{% endif %}
+{% endcomment %}
+{% if ownership %}
+    <table>
+    <thead>
+        <tr>
+            <th>Player</th>
+            <th>Pos</th>
+            <th>Ownership</th>
+            <th>Points</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for row in ownership %}
+        <tr>
+            <td>{{ row.player.name }}</td><td>{{ row.player.position }}</td><td>{{ row.ownership|percentage }}</td><td>{{ row.fpts }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+{% else %}
+    <p>No ownership information is available for contest.</p>
 {% endif %}
