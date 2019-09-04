@@ -6,14 +6,17 @@ from .models import DKContest
 
 # Create your views here.
 def index(request):
-    latest_contests = DKContest.objects.order_by("-date")[:5]
-    context = {"latest_contests": latest_contests}
+    contests = DKContest.objects.order_by("-date")
+    context = {"contests": contests}
     return render(request, "results/index.html", context)
 
 
 def detail(request, contest_id):
     try:
         contest = DKContest.objects.get(pk=contest_id)
+        results = contest.results.all()
     except contest.DoesNotExist:
         raise Http404("DKContest does not exist")
-    return render(request, "results/detail.html", {"contest": contest})
+    return render(
+        request, "results/detail.html", {"contest": contest, "results": results}
+    )

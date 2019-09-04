@@ -1,9 +1,24 @@
-{% if latest_contests %}
-    <ul>
-    {% for contest in latest_contests %}
-        <li><a href="/results/{{ contest.id }}/">{{ contest.name }}</a></li>
+{% if contests %}
+    <table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Entries</th>
+            <th>Results</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for contest in contests %}
+        <tr>
+            <td>{{ contest.date }}</td>
+            <td><a href="/results/{{ contest.id }}">{{ contest.name }}</a></td>
+            <td>{{ contest.entries }}</td>
+            <td>{{ contest.results.count }}</td>
+        </tr>
     {% endfor %}
-    </ul>
+    </tbody>
+    </table>
 {% else %}
     <p>No contests are available.</p>
 {% endif %}
