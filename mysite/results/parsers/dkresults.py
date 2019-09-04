@@ -10,7 +10,13 @@ import browsercookie
 import requests
 from bs4 import BeautifulSoup
 
-from results.models import DKContest, DKContestPayout, DKResult, Player
+from results.models import (
+    DKContest,
+    DKContestPayout,
+    DKResult,
+    DKResultOwnership,
+    Player,
+)
 from results.utils import get_datetime_yearless
 
 STOP_WORDS = set(["PG", "SG", "SF", "PF", "C", "F", "G", "UTIL"])
@@ -164,19 +170,19 @@ def run(sport, contest_ids, contest=True, resultscsv=True, resultsparse=True):
         #             z.extract(name, CSVPATH)
         url = f"https://www.draftkings.com/contest/gamecenter/{contest_id}"
         # update referer
-        headers = {
-            "Host": "www.draftkings.com",
-            "Connection": "keep-alive",
-            "Upgrade-Insecure-Requests": "1",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36",
-            "Sec-Fetch-Mode": "navigate",
-            "Sec-Fetch-User": "?1",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
-            "Sec-Fetch-Site": "same-origin",
-            "Referer": url,
-            "Accept-Encoding": "gzip, deflate, br",
-            "Accept-Language": "en-US,en;q=0.9",
-        }
+        # headers = {
+        #     "Host": "www.draftkings.com",
+        #     "Connection": "keep-alive",
+        #     "Upgrade-Insecure-Requests": "1",
+        #     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36",
+        #     "Sec-Fetch-Mode": "navigate",
+        #     "Sec-Fetch-User": "?1",
+        #     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
+        #     "Sec-Fetch-Site": "same-origin",
+        #     "Referer": url,
+        #     "Accept-Encoding": "gzip, deflate, br",
+        #     "Accept-Language": "en-US,en;q=0.9",
+        # }
         # HEADERS["Referer"] = url
 
         # OUTFILE = "out.zip"
@@ -198,52 +204,80 @@ def run(sport, contest_ids, contest=True, resultscsv=True, resultsparse=True):
             if name in player_cache:
                 result = player_cache[name]
                 return result
-            # else:
-            #     return Player.get_by_name(name)
+            return Player.get_by_name(name)
 
         # player_cache = {p.full_name: p for p in Player.objects.all() if p.full_name}
-        player_cache = {p.name: p for p in Player.objects.all() if p.name}
+        player_cache = {
+            p.name: p for p in Player.objects.filter(sport__exact=sport) if p.name
+        }
 
         contest, _ = DKContest.objects.get_or_create(dk_id=contest_id)
         filename = CSVPATH / f"contest-standings-{contest_id}.csv"
         try:
-            with open(filename, "r") as file:
-                csvreader = reader(file, delimiter=",", quotechar='"')
+            with open(filename, "r", encoding="utf8") as file:
+                csvreader = reader(file)
+                count = 0
                 for i, row in enumerate(csvreader):
                     # Rank, EntryId, EntryName, TimeRemaining, Points, Lineup
                     if i != 0:
                         # rank, entry_id, entry_name, _, points, lineup = row
                         rank, entry_id, entry_name, _, points, lineup = row[:6]
-                        lineup = lineup.split()
-                        for wordidx, word in enumerate(lineup[:]):
-                            if word in STOP_WORDS:
-                                lineup[wordidx] = "\t"
+                        # lineup = lineup.split()
+                        # for wordidx, word in enumerate(lineup[:]):
+                        #     if word in STOP_WORDS:
+                        #         lineup[wordidx] = "\t"
                         # word_list = " ".join(lineup).split("\t")
-                        players = [
-                            get_player_cached(word.strip(), player_cache)
-                            for word in " ".join(lineup).split("\t")
-                            if word.strip()
-                        ]
-                        if players:
-                            DKResult.objects.update_or_create(
-                                dk_id=entry_id,
-                                defaults={
-                                    "contest": contest,
-                                    "name": parse_entry_name(entry_name),
-                                    "rank": rank,
-                                    "points": points,
-                                    # "pg": players[0],
-                                    # "sg": players[1],
-                                    # "sf": players[2],
-                                    # "pf": players[3],
-                                    # "c": players[4],
-                                    # "g": players[5],
-                                    # "f": players[6],
-                                    # "util": players[7],
-                                },
+                        # players = []
+                        # for word in " ".join(lineup).split("\t"):
+                        #     if word.strip():
+                        #         get_player_cached(word.strip(), player_cache)
+                        # players = [
+                        #     get_player_cached(word.strip(), player_cache)
+                        #     for word in " ".join(lineup).split("\t")
+                        #     if word.strip()
+                        # ]
+                        # if players:
+                        DKResult.objects.update_or_create(
+                            dk_id=entry_id,
+                            defaults={
+                                "contest": contest,
+                                "name": parse_entry_name(entry_name),
+                                "rank": rank,
+                                "points": points,
+                                # "pg": players[0],
+                                # "sg": players[1],
+                                # "sf": players[2],
+                                # "pf": players[3],
+                                # "c": players[4],
+                                # "g": players[5],
+                                # "f": players[6],
+                                # "util": players[7],
+                            },
+                        )
+
+                        # grab ownership stats for players
+                        player_stats = row[7:]
+                        if player_stats:
+                            # continue if empty
+                            # (sometimes happens on the player columns in the standings)
+                            if all(s == "" or s.isspace() for s in player_stats):
+                                continue
+
+                            name, pos, ownership, fpts = player_stats
+
+                            player = get_player_cached(name, player_cache)
+                            ownership = float(ownership.strip("%")) / 100
+
+                            DKResultOwnership.objects.update_or_create(
+                                contest=contest,
+                                player=player,
+                                defaults={"ownership": ownership, "fpts": fpts},
                             )
+
                     if i % 5000 == 0:
                         print(f"{i} DKResult records created")
+                    count = i
+                print(f"{count} DKResult records created")
         except IOError:
             print(f"Couldn't find CSV results file {filename}")
 
