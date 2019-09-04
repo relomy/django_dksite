@@ -103,8 +103,8 @@ class DKContestPayout(models.Model):
     contest = models.ForeignKey(
         DKContest, related_name="payouts", on_delete=models.PROTECT
     )
-    upper_rank = models.PositiveIntegerField()
-    lower_rank = models.PositiveIntegerField()
+    upper_rank = models.PositiveIntegerField(null=True, blank=True)
+    lower_rank = models.PositiveIntegerField(null=True, blank=True)
     payout = models.DecimalField(max_digits=18, decimal_places=2)
 
     class Meta:
@@ -122,7 +122,7 @@ class DKResult(models.Model):
     )
     dk_id = models.CharField(max_length=15, unique=True)
     name = models.CharField(max_length=50)
-    rank = models.PositiveIntegerField()
+    rank = models.PositiveIntegerField(null=True, blank=True)
     points = models.FloatField()
     # pg = models.ForeignKey(
     #     Player, related_name="dk_pg_results", on_delete=models.PROTECT

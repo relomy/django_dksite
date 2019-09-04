@@ -1,5 +1,9 @@
 import datetime
+import logging
+
 from results.models import DKContest
+
+logger = logging.getLogger(__name__)
 
 
 def get_datetime_yearless(datestr):
@@ -30,13 +34,17 @@ def get_empty_contest_ids(sport):
     contests = DKContest.objects.filter(date__gte=last, sport__exact=sport)
     for contest in contests:
         num_results = contest.results.count()
-        print(
-            f"{contest.entries} entries expected for [{contest.dk_id}] {contest.name} "
-            f"[{contest.date}], {num_results} found"
+        logger.info(
+            "%s entries expected for [%s] %s [%s], %s found",
+            contest.entries,
+            contest.dk_id,
+            contest.name,
+            contest.date,
+            num_results,
         )
         if num_results == 0:
             contest_ids.append(contest.dk_id)
-    print("Contest ids: {}".format(", ".join(contest_ids)))
+    logger.info("Contest ids: %s", ", ".join(contest_ids))
     return contest_ids
 
 
@@ -56,7 +64,7 @@ def get_contest_ids(sport, limit=1, entry_fee=None):
         else DKContest.objects.filter(sport__exact=sport, date__gte=last)
     )
     contest_ids = [contest.dk_id for contest in contests]
-    print("Contest ids: {}".format(", ".join(contest_ids)))
+    logger.info("Contest ids: %s", ", ".join(contest_ids))
     return contest_ids
 
 

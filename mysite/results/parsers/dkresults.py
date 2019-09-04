@@ -1,6 +1,7 @@
 import datetime
 import decimal
 import io
+import logging
 import re
 import zipfile
 from csv import reader
@@ -18,6 +19,8 @@ from results.models import (
     Player,
 )
 from results.utils import get_datetime_yearless
+
+logger = logging.getLogger(__name__)
 
 STOP_WORDS = set(["PG", "SG", "SF", "PF", "C", "F", "G", "UTIL"])
 
@@ -76,9 +79,9 @@ def get_contest_data(contest_id):
             .find_all("span")
         )
         completed = info_header[3].string
-        print(int(info_header[4].string))
+        logger.debug(int(info_header[4].string))
         if completed.strip().upper() == "COMPLETED":
-            print("completed")
+            logger.debug("contest %d is completed", contest_id)
             DKContest.objects.update_or_create(
                 dk_id=contest_id,
                 defaults={
@@ -90,14 +93,14 @@ def get_contest_data(contest_id):
                 },
             )
         else:
-            print(f"Contest {contest_id} is still in progress")
+            logger.warning("Contest %d is still in progress", contest_id)
     except IndexError:
         # This error occurs for old contests whose pages no longer are
         # being served.
         # Traceback:
         # header = soup.find_all(class_='top')[0].find_all('h4')
         # IndexError: list index out of range
-        print(f"Couldn't find DK contest with id {contest_id}")
+        logger.error("Couldn't find DK contest with id %s", contest_id)
 
 
 def place_to_number(place):
@@ -131,20 +134,22 @@ def get_contest_prize_data(contest_id):
                 lower_rank=bottom,
                 defaults={"payout": dollars_to_decimal(payout)},
             )
-    except IndexError:
+    except IndexError as ex:
         # See comment in get_contest_data()
-        print(f"Couldn't find DK contest with id {contest_id}")
+        logger.error("Couldn't find DK contest with id %s: %s", contest_id, ex)
 
 
 def save_contest_standings_to_file(response, filename):
-    print(f"Downloading file from {response.url}")
+    logger.info("Downloading file from %s", response.url)
 
     if (
         "Content-Length" in response.headers
         and response.headers["Content-Length"] == "0"
     ):
-        print("Content-Length is empty - returning False")
+        logger.debug("Content-Length is empty - returning False")
         return False
+
+    logger.debug("response headers: %s", response.headers)
 
     if "text/html" in response.headers["Content-Type"]:
         return False
@@ -176,7 +181,7 @@ def get_contest_result_data(contest_id):
 
         # unzip_data()
     except zipfile.BadZipfile:
-        print(f"Couldn't download/extract CSV zip for {contest_id}")
+        logger.error("Couldn't download/extract CSV zip for %s", contest_id)
 
 
 def parse_entry_name(entry_name):
@@ -271,12 +276,12 @@ def parse_contest_result_csv(sport, contest_id):
                             defaults={"ownership": ownership, "fpts": fpts},
                         )
 
-                if i % 5000 == 0:
-                    print(f"{i} DKResult records created")
+                    if i % 5000 == 0:
+                        logger.info("%d DKResult records created", i)
                 count = i
-            print(f"{count} DKResult records created")
+            logger.info("%d DKResult records created", count)
     except IOError:
-        print(f"Couldn't find CSV results file {filename}")
+        logger.error("Couldn't find CSV results file %s", filename)
 
 
 def run(sport, contest_ids, contest=True, resultscsv=True, resultsparse=True):

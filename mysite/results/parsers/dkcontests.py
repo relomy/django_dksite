@@ -1,4 +1,5 @@
 import datetime
+import logging
 import re
 
 import browsercookie
@@ -6,6 +7,8 @@ import requests
 from django.utils.timezone import make_aware
 
 from results.models import DKContest
+
+logger = logging.getLogger(__name__)
 
 COOKIES = browsercookie.chrome()
 HEADERS = {
@@ -53,19 +56,20 @@ class Contest:
         return datetime.datetime.fromtimestamp(timestamp / 1000)
 
     def __str__(self):
-        return f"{vars(self)}"
+        # return f"{vars(self)}"
+        return f"{self.name} [{self.id}] [{self.start_dt}]"
 
 
 def get_largest_contest(contests, entry_fee=25, query=None, exclude=None):
     """Return largest contest from a list of Contests."""
-    print("contests size: {}".format(len(contests)))
+    logger.debug("contests size: %d", len(contests))
 
     # add contest to list if it matches criteria
     contest_list = [
         c for c in contests if match_contest_criteria(c, entry_fee, query, exclude)
     ]
 
-    print("number of contests meeting requirements: {}".format(len(contest_list)))
+    logger.debug("number of contests meeting requirements: %d", len(contest_list))
 
     # sorted_list = sorted(contest_list, key=lambda x: x.entries, reverse=True)
     if contest_list:
@@ -97,7 +101,7 @@ def match_contest_criteria(contest, entry_fee=25, query=None, exclude=None):
 
 
 def get_contests(url):
-    print(url)
+    logger.info("url: %s", url)
 
     response = requests.get(url, headers=HEADERS, cookies=COOKIES).json()
     response_contests = {}
@@ -145,7 +149,7 @@ def find_new_contests(sport):
         largest_contest = get_largest_contest(contests, entry_fee=entry_fee)
         # check if largest_contest is None
         if largest_contest is not None:
-            print(f"Appending contest {largest_contest}")
+            logger.debug("Appending contest %s", largest_contest)
             target_contests.append(largest_contest)
 
     for contest in target_contests:

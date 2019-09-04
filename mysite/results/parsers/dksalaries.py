@@ -1,5 +1,6 @@
 import csv
 import datetime
+import logging
 import re
 from pathlib import Path
 
@@ -7,6 +8,8 @@ import browsercookie
 import requests
 
 from results.models import DKSalary, Player
+
+logger = logging.getLogger(__name__)
 
 CSVPATH = Path("mysite/results/data/salaries/")
 COOKIES = browsercookie.chrome()
@@ -65,15 +68,22 @@ def write_salaries_to_db(
 
             if player.dk_position != pos:
                 player.dk_position = pos
-                print(f"Updating {player.name} position {player.dk_position} to {pos}")
+                logger.debug(
+                    "Updating %s position %s to %s",
+                    player.name,
+                    player.dk_position,
+                    pos,
+                )
                 player.save()
 
             if dksalary.salary != int(salary):
-                print(
-                    f"Warning: trying to overwrite salary "
-                    f"(old: {dksalary.salary} dg: {dksalary.draft_group_id} "
-                    f"new: {salary} dg: {draft_group_id}) for {player.name}. "
-                    "Ignoring - did not overwrite "
+                logger.warning(
+                    "Warning: trying to overwrite salary (old: %s dg: %s new: %s dg: %s) for %s. Ignoring - did not overwrite ",
+                    dksalary.salary,
+                    dksalary.draft_group_id,
+                    salary,
+                    draft_group_id,
+                    player.name,
                 )
             return_rows.append(row)
     return return_rows
@@ -115,7 +125,7 @@ def write_csv(rows, date, sport):
     # Lists are unhashable so convert each element to a tuple
     # rows = sorted(set([tuple(r) for r in rows]), key=lambda x: (-int(x[5]), x[2]))
     rows = sorted({tuple(r) for r in rows}, key=lambda x: (-int(x[5]), x[2]))
-    print(f"Writing salaries to csv {outfile}")
+    logger.info("Writing salaries to csv %s", outfile)
     with open(outfile, "w", newline="\n") as file:
         csvwriter = csv.writer(file, delimiter=",", quotechar='"')
         csvwriter.writerow(header_row)
@@ -162,9 +172,12 @@ def matches_bad_criteria(sport, tag, suffix, draft_group_id, contest_type_id):
         reason = "unacceptable contest type id"
 
     if reason:
-        print(
-            f"Skipping (suffix: {suffix}) dg: {draft_group_id} "
-            f"type: {contest_type_id} because {reason}"
+        logger.debug(
+            "Skipping (suffix: %s) dg: %s type: %s because %s",
+            suffix,
+            draft_group_id,
+            contest_type_id,
+            reason,
         )
         return True
 
@@ -195,16 +208,23 @@ def run(sport, writecsv=True):
         #     continue
 
         if tag != "Featured" or suffix is not None:
-            print(
-                f"Skipping {sport} [{date}]: draft group {draft_group_id}"
-                f"contest type {contest_type_id} [suffix: {suffix}]"
+            logger.debug(
+                "Skipping %s [%s]: draft group %s contest type %s [suffix: %s]",
+                sport,
+                date,
+                draft_group_id,
+                contest_type_id,
+                suffix,
             )
             continue
 
-        print(
-            "Updating salaries for {} [{}]: draft group {} contest type {} [suffix: {}] ".format(
-                sport, date, draft_group_id, contest_type_id, suffix
-            )
+        logger.info(
+            "Updating salaries for %s [%s]: draft group %s contest type %s [suffix: %s] ",
+            sport,
+            date,
+            draft_group_id,
+            contest_type_id,
+            suffix,
         )
         row = get_salary_csv(sport, draft_group_id, contest_type_id, date)
         if date not in rows_by_date:
