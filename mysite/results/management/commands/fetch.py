@@ -77,24 +77,9 @@ class Command(BaseCommand):
             if options["dk_new_contests"]:
                 dkcontests_parser.find_new_contests(sport)
             if options["dk_results"]:
-                dkresults_parser.run(
-                    sport=sport,
-                    contest_ids=options["dk_results"],
-                    contest=True,
-                    resultscsv=True,
-                    resultsparse=True
-                    # contest=options["dk_results_contest"],
-                    # resultscsv=options["dk_results_csv"],
-                    # resultsparse=options["dk_results_parse"],
-                )
+                dkresults_parser.run(sport=sport, contest_ids=options["dk_results"])
             if options["dk_results_limit"] > -1:
                 dkresults_parser.run(
                     sport=sport,
                     contest_ids=get_contest_ids(sport, options["dk_results_limit"]),
-                    # contest=options["dk_results_contest"],
-                    # resultscsv=options["dk_results_csv"],
-                    # resultsparse=options["dk_results_parse"],
-                    contest=True,
-                    resultscsv=True,
-                    resultsparse=True,
                 )
