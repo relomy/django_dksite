@@ -32,6 +32,15 @@ class Command(BaseCommand):
             help="Fetch today's new contests from draftkings.com",
         )
         parser.add_argument(
+            "--dk-results",
+            "-r",
+            action="store",
+            nargs="+",
+            dest="dk_results",
+            default=False,
+            help="Fetch contest result data from draftkings.com by id",
+        )
+        parser.add_argument(
             "--update",
             "-u",
             action="store_true",
@@ -47,6 +56,7 @@ class Command(BaseCommand):
             # injury_parser.run()
             dksalaries_parser.run(sport)
             dkresults_parser.run(
+                sport=sport,
                 contest_ids=get_empty_contest_ids(sport),
                 contest=True,
                 resultscsv=True,
@@ -57,3 +67,14 @@ class Command(BaseCommand):
                 dksalaries_parser.run(sport)
             if options["dk_new_contests"]:
                 dkcontests_parser.find_new_contests(sport)
+            if options["dk_results"]:
+                dkresults_parser.run(
+                    sport=sport,
+                    contest_ids=options["dk_results"],
+                    contest=True,
+                    resultscsv=True,
+                    resultsparse=True
+                    # contest=options["dk_results_contest"],
+                    # resultscsv=options["dk_results_csv"],
+                    # resultsparse=options["dk_results_parse"],
+                )

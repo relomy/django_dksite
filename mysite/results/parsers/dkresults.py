@@ -34,7 +34,7 @@ HEADERS = {
 }
 
 
-def run(contest_ids, contest=True, resultscsv=True, resultsparse=True):
+def run(sport, contest_ids, contest=True, resultscsv=True, resultsparse=True):
     """
     Downloads and unzips the CSV results and then populates the database
     """
@@ -131,17 +131,13 @@ def run(contest_ids, contest=True, resultscsv=True, resultsparse=True):
             print(f"Couldn't find DK contest with id {contest_id}")
 
     def get_contest_result_data(contest_id):
-        url = f"https://www.draftkings.com/contest/gamecenter/{contest_id}"
-        # update referer
-        HEADERS["referer"] = url
-
-        # OUTFILE = "out.zip"
-        filename = CSVPATH / f"contest-standings-{contest_id}.csv"
-
         def read_response(response):
             print(f"Downloading file from {response.url}")
 
-            if response.headers["Content-Length"] == "0":
+            if (
+                "Content-Length" in response.headers
+                and response.headers["Content-Length"] == "0"
+            ):
                 print("Content-Length is empty - returning False")
                 return False
 
@@ -166,12 +162,29 @@ def run(contest_ids, contest=True, resultscsv=True, resultsparse=True):
         #         z = zipfile.ZipFile(f)
         #         for name in z.namelist():
         #             z.extract(name, CSVPATH)
+        url = f"https://www.draftkings.com/contest/gamecenter/{contest_id}"
+        # update referer
+        headers = {
+            "Host": "www.draftkings.com",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-User": "?1",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
+            "Sec-Fetch-Site": "same-origin",
+            "Referer": url,
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "en-US,en;q=0.9",
+        }
+        # HEADERS["Referer"] = url
 
+        # OUTFILE = "out.zip"
+        filename = CSVPATH / f"contest-standings-{contest_id}.csv"
         try:
             export_url = url.replace("gamecenter", "exportfullstandingscsv")
-            return read_response(
-                requests.get(export_url, headers=HEADERS, cookies=COOKIES)
-            )
+            response = requests.get(export_url, cookies=COOKIES)
+            return read_response(response)
 
             # unzip_data()
         except zipfile.BadZipfile:
@@ -199,7 +212,8 @@ def run(contest_ids, contest=True, resultscsv=True, resultsparse=True):
                 for i, row in enumerate(csvreader):
                     # Rank, EntryId, EntryName, TimeRemaining, Points, Lineup
                     if i != 0:
-                        rank, entry_id, entry_name, _, points, lineup = row
+                        # rank, entry_id, entry_name, _, points, lineup = row
+                        rank, entry_id, entry_name, _, points, lineup = row[:6]
                         lineup = lineup.split()
                         for wordidx, word in enumerate(lineup[:]):
                             if word in STOP_WORDS:
