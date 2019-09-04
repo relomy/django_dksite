@@ -31,7 +31,8 @@ def get_empty_contest_ids(sport):
     for contest in contests:
         num_results = contest.results.count()
         print(
-            f"{contest.entries} entries expected for {contest.name} [{contest.date}], {num_results} found"
+            f"{contest.entries} entries expected for [{contest.dk_id}] {contest.name} "
+            f"[{contest.date}], {num_results} found"
         )
         if num_results == 0:
             contest_ids.append(contest.dk_id)
@@ -39,7 +40,7 @@ def get_empty_contest_ids(sport):
     return contest_ids
 
 
-def get_contest_ids(limit=1, entry_fee=None):
+def get_contest_ids(sport, limit=1, entry_fee=None):
     """
     Returns a list of contest ids for the last @limit days with an optional
     additional @entry_fee filter
@@ -48,9 +49,11 @@ def get_contest_ids(limit=1, entry_fee=None):
     today = datetime.date.today()
     last = today - datetime.timedelta(days=limit)
     contests = (
-        DKContest.objects.filter(date__gte=last, entry_fee=entry_fee)
+        DKContest.objects.filter(
+            sport__exact=sport, date__gte=last, entry_fee=entry_fee
+        )
         if entry_fee
-        else DKContest.objects.filter(date__gte=last)
+        else DKContest.objects.filter(sport__exact=sport, date__gte=last)
     )
     contest_ids = [contest.dk_id for contest in contests]
     print("Contest ids: {}".format(", ".join(contest_ids)))
