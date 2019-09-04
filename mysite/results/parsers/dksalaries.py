@@ -126,6 +126,7 @@ def write_csv(rows, date, sport):
     # rows = sorted(set([tuple(r) for r in rows]), key=lambda x: (-int(x[5]), x[2]))
     rows = sorted({tuple(r) for r in rows}, key=lambda x: (-int(x[5]), x[2]))
     logger.info("Writing salaries to csv %s", outfile)
+    # TODO outfile doesn't seem to open in cmder? but it does in vscode.
     with open(outfile, "w", newline="\n") as file:
         csvwriter = csv.writer(file, delimiter=",", quotechar='"')
         csvwriter.writerow(header_row)
