@@ -11,7 +11,9 @@ from results.models import DKSalary, Player
 
 logger = logging.getLogger(__name__)
 
-CSVPATH = Path("mysite/results/data/salaries/")
+# CSVPATH = Path(__file__, "mysite/results/data/salaries/")
+DIR = Path(__file__).parents[0]
+CSVPATH = Path(DIR, "../data/salaries/")
 COOKIES = browsercookie.chrome()
 HEADERS = {
     "Accept": "*/*",
@@ -118,15 +120,15 @@ def write_csv(rows, date, sport):
         "teamAbbrev",
         "AvgPointsPerGame",
     ]
-    outfile = CSVPATH / f"dk_{sport}_salaries_{date:%Y_%m_%d}.csv"
+    # outfile = CSVPATH / f"dk_{sport}_salaries_{date:%Y_%m_%d}.csv"
+    outfile = Path(CSVPATH, f"dk_{sport}_salaries_{date:%Y_%m_%d}.csv")
     # outfile = CSVPATH / f"dk_{sport}_salaries_{draft_group_id}.csv"
 
     # Remove duplicate rows and sort by salary, then name
     # Lists are unhashable so convert each element to a tuple
     # rows = sorted(set([tuple(r) for r in rows]), key=lambda x: (-int(x[5]), x[2]))
     rows = sorted({tuple(r) for r in rows}, key=lambda x: (-int(x[5]), x[2]))
-    logger.info("Writing salaries to csv %s", outfile)
-    # TODO outfile doesn't seem to open in cmder? but it does in vscode.
+    logger.info("Writing salaries to csv %s", outfile.resolve())
     with open(outfile, "w", newline="\n") as file:
         csvwriter = csv.writer(file, delimiter=",", quotechar='"')
         csvwriter.writerow(header_row)

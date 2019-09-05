@@ -24,7 +24,8 @@ logger = logging.getLogger(__name__)
 
 STOP_WORDS = set(["PG", "SG", "SF", "PF", "C", "F", "G", "UTIL"])
 
-CSVPATH = Path("mysite/results/data/results/")
+DIR = Path(__file__).parents[0]
+CSVPATH = Path(DIR, "../data/results/")
 COOKIES = browsercookie.chrome()
 HEADERS = {
     "Accept": "*/*",
@@ -81,7 +82,7 @@ def get_contest_data(contest_id):
         completed = info_header[3].string
         logger.debug(int(info_header[4].string))
         if completed.strip().upper() == "COMPLETED":
-            logger.debug("contest %d is completed", contest_id)
+            logger.debug("contest %s is completed", contest_id)
             DKContest.objects.update_or_create(
                 dk_id=contest_id,
                 defaults={
@@ -93,7 +94,7 @@ def get_contest_data(contest_id):
                 },
             )
         else:
-            logger.warning("Contest %d is still in progress", contest_id)
+            logger.warning("Contest %s is still in progress", contest_id)
     except IndexError:
         # This error occurs for old contests whose pages no longer are
         # being served.
@@ -139,7 +140,7 @@ def get_contest_prize_data(contest_id):
         logger.error("Couldn't find DK contest with id %s: %s", contest_id, ex)
 
 
-def save_contest_standings_to_file(response, filename):
+def save_contest_standings_to_file(response, contest_id):
     logger.info("Downloading file from %s", response.url)
 
     if (
@@ -151,6 +152,7 @@ def save_contest_standings_to_file(response, filename):
 
     logger.debug("response headers: %s", response.headers)
 
+    filename = Path(CSVPATH, f"contest-standings-{contest_id}.csv")
     if "text/html" in response.headers["Content-Type"]:
         return False
     elif response.headers["Content-Type"] == "text/csv":
@@ -173,11 +175,10 @@ def get_contest_result_data(contest_id):
     # update referer
     # HEADERS["Referer"] = url
 
-    filename = CSVPATH / f"contest-standings-{contest_id}.csv"
     try:
         export_url = url.replace("gamecenter", "exportfullstandingscsv")
         response = requests.get(export_url, cookies=COOKIES)
-        return save_contest_standings_to_file(response, filename)
+        return save_contest_standings_to_file(response, contest_id)
 
         # unzip_data()
     except zipfile.BadZipfile:

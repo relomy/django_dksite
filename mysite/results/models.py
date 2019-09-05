@@ -1,16 +1,9 @@
+import logging
 import unicodedata
 
 from django.db import models
 
-# Create your models here.
-# class Salary(models.Model):
-#     pos = models.CharField(max_length=10)
-#     roster_pos = models.CharField(max_length=10)
-#     salary = models.IntegerField()
-#     game_info = models.CharField(max_length=30)
-#     team_abbv = models.CharField(max_length=20)
-#     avg_ppg = models.DecimalField(max_digits=4, decimal_places=3)
-#     players = models.ManyToManyField("Player")
+logger = logging.getLogger(__name__)
 
 
 class Player(models.Model):
@@ -29,16 +22,21 @@ class Player(models.Model):
         try:
             return cls.objects.get(name__iexact=name)
         except (cls.DoesNotExist, cls.MultipleObjectsReturned) as ex:
-            print(
-                f"Exception in Player.get_by_name({name}): {ex}. Trying to remove accents"
+            logger.error(
+                "Exception in Player.get_by_name(%s): %s. Trying to strip_accents(%s)",
+                name,
+                ex,
+                name,
             )
 
         # try getting exactly the name (case-insensitive) without accents
         try:
             return cls.objects.get(name__iexact=Player.strip_accents(name))
         except (cls.DoesNotExist, cls.MultipleObjectsReturned) as ex:
-            print(
-                f"Exception in Player.get_by_name({name}): {ex}. Trying name__contains"
+            logger.error(
+                "Exception in Player.get_by_name(%s): {%s}. Trying name__contains",
+                name,
+                ex,
             )
 
         # try contains
