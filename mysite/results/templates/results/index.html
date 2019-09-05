@@ -4,7 +4,7 @@
         <table class="table table-hover table-striped">
         <thead class="thead-dark">
             <tr>
-                <th scope="col">Date</th>
+                <th scope="col">Contest Start</th>
                 <th scope="col">Name</th>
                 <th scope="col">Entries</th>
                 <th scope="col">Results</th>
@@ -13,8 +13,8 @@
         <tbody>
         {% for contest in contests %}
             <tr>
-                <td>{{ contest.date }}</td>
-                <td><a href="/results/{{ contest.id }}">{{ contest.name }}</a></td>
+                <td>{{ contest.datetime|date:'D, M m Y @ H:i e' }}</td>
+                <td><a class="text-default" href="/results/{{ contest.id }}">{{ contest.name }}</a></td>
                 <td>{{ contest.entries }}</td>
                 <td>{{ contest.results.count }}</td>
             </tr>
