@@ -150,7 +150,7 @@ def save_contest_standings_to_file(response, contest_id):
         logger.debug("Content-Length is empty - returning False")
         return False
 
-    logger.debug("response headers: %s", response.headers)
+    # logger.debug("response headers: %s", response.headers)
 
     filename = Path(CSVPATH, f"contest-standings-{contest_id}.csv")
     if "text/html" in response.headers["Content-Type"]:

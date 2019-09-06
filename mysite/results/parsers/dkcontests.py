@@ -51,8 +51,9 @@ class Contest:
         if "IsGuaranteed" in self.attr:
             self.is_guaranteed = self.attr["IsGuaranteed"]
 
-    def get_dt_from_timestamp(self, timestamp_str):
-        timestamp = float(re.findall(r"[^\d]*(\d+)[^\d]*", timestamp_str)[0])
+    @staticmethod
+    def get_dt_from_timestamp(timestamp: str):
+        timestamp = float(re.findall(r"[^\d]*(\d+)[^\d]*", timestamp)[0])
         return datetime.datetime.fromtimestamp(timestamp / 1000)
 
     def __str__(self):
@@ -156,7 +157,7 @@ def find_new_contests(sport):
         date_time = contest.start_dt
         # make naive datetime aware based on django settings
         aware_datetime = make_aware(date_time)
-        DKContest.objects.update_or_create(
+        dkcontest, created = DKContest.objects.update_or_create(
             dk_id=contest.id,
             defaults={
                 "date": aware_datetime.date(),
@@ -169,3 +170,5 @@ def find_new_contests(sport):
                 "entry_fee": contest.entry_fee,
             },
         )
+        if created:
+            logger.info("Creating DKContest %s", dkcontest)
