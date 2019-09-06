@@ -8,6 +8,7 @@
                 <th scope="col">Name</th>
                 <th scope="col">Entries</th>
                 <th scope="col">Results</th>
+                <th scope="col">draft_group_id</th>
             </tr>
         </thead>
         <tbody>
@@ -17,6 +18,7 @@
                 <td><a class="text-default" href="/results/{{ contest.id }}">{{ contest.name }}</a></td>
                 <td>{{ contest.entries }}</td>
                 <td>{{ contest.results.count }}</td>
+                <td>{{ contest.draft_group_id }}</td>
             </tr>
         {% endfor %}
         </tbody>

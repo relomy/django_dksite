@@ -163,6 +163,7 @@ def find_new_contests(sport):
                 "datetime": aware_datetime,
                 "sport": sport,
                 "name": contest.name,
+                "draft_group_id": contest.draft_group,
                 "total_prizes": contest.total_prizes,
                 "entries": contest.entries,
                 "entry_fee": contest.entry_fee,

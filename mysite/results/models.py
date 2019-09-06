@@ -22,7 +22,7 @@ class Player(models.Model):
         try:
             return cls.objects.get(name__iexact=name)
         except (cls.DoesNotExist, cls.MultipleObjectsReturned) as ex:
-            logger.error(
+            logger.debug(
                 "Exception in Player.get_by_name(%s): %s. Trying to strip_accents(%s)",
                 name,
                 ex,
@@ -33,13 +33,13 @@ class Player(models.Model):
         try:
             return cls.objects.get(name__iexact=Player.strip_accents(name))
         except (cls.DoesNotExist, cls.MultipleObjectsReturned) as ex:
-            logger.error(
+            logger.debug(
                 "Exception in Player.get_by_name(%s): {%s}. Trying name__contains",
                 name,
                 ex,
             )
 
-        # try contains
+        # try name__contains
         try:
             return cls.objects.get(name__contains=name)
         except (cls.DoesNotExist, cls.MultipleObjectsReturned) as ex:
@@ -92,6 +92,10 @@ class DKContest(models.Model):
     entries = models.PositiveIntegerField(null=True, blank=True)
     entry_fee = models.FloatField(null=True, blank=True)
     positions_paid = models.PositiveIntegerField(null=True, blank=True)
+    draft_group_id = models.PositiveIntegerField(null=True, blank=True)
+    # salary = models.ForeignKey(
+    #     DKSalary, related_name="dk_salaries", on_delete=models.PROTECT
+    # )
 
     def __str__(self):
         return f"{self.name} ({self.date})"

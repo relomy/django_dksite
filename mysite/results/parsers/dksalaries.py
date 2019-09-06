@@ -1,7 +1,6 @@
 import csv
 import datetime
 import logging
-import re
 from pathlib import Path
 
 import browsercookie
@@ -40,7 +39,9 @@ def write_salaries_to_db(
     # try:
     for i, row in enumerate(csvreader):
         if i != 0 and len(row) == 9:  # Ignore possible empty rows
-            pos, name_and_pid, name, dk_id, rpos, salary, gameinfo, team_abbv, ppg = row
+            pos, name_and_pid, name, dk_id, rpos, salary, gameinfo, team_abbv, ppg = (  # pylint: disable=unused-variable
+                row
+            )
             # trim whitespace from name
             name = name.strip(" \t\n\r")
             # player = Player.get_by_name(name)
@@ -80,7 +81,8 @@ def write_salaries_to_db(
 
             if dksalary.salary != int(salary):
                 logger.warning(
-                    "Warning: trying to overwrite salary (old: %s dg: %s new: %s dg: %s) for %s. Ignoring - did not overwrite ",
+                    "Warning: trying to overwrite salary (old: %s dg: %s new: %s dg: %s) for %s. "
+                    "Ignoring - did not overwrite",
                     dksalary.salary,
                     dksalary.draft_group_id,
                     salary,
@@ -152,39 +154,39 @@ def get_salary_date(draft_group):
     ).date()
 
 
-def matches_bad_criteria(sport, tag, suffix, draft_group_id, contest_type_id):
-    accepted_contest_type_ids = {"NFL": [21]}  # 21 = normal NFL contest type
-    regex = re.compile(r"[A-Z]{2,} vs [A-Z]{2,}")
-    reason = ""
-    if tag != "Featured":
-        reason = "it's not featured"
+# def matches_bad_criteria(sport, tag, suffix, draft_group_id, contest_type_id):
+#     accepted_contest_type_ids = {"NFL": [21]}  # 21 = normal NFL contest type
+#     regex = re.compile(r"[A-Z]{2,} vs [A-Z]{2,}")
+#     reason = ""
+#     if tag != "Featured":
+#         reason = "it's not featured"
 
-    if suffix is None:
-        # a None suffix seems to be our key contest type
-        return False
-    else:
-        if "Tiers" in suffix:
-            reason = "'Tiers' in suffix"
-        elif regex.search(suffix):
-            reason = "matches 'vs' regex"
+#     if suffix is None:
+#         # a None suffix seems to be our key contest type
+#         return False
+#     else:
+#         if "Tiers" in suffix:
+#             reason = "'Tiers' in suffix"
+#         elif regex.search(suffix):
+#             reason = "matches 'vs' regex"
 
-    if (
-        sport in accepted_contest_type_ids
-        and contest_type_id not in accepted_contest_type_ids[sport]
-    ):
-        reason = "unacceptable contest type id"
+#     if (
+#         sport in accepted_contest_type_ids
+#         and contest_type_id not in accepted_contest_type_ids[sport]
+#     ):
+#         reason = "unacceptable contest type id"
 
-    if reason:
-        logger.debug(
-            "Skipping (suffix: %s) dg: %s type: %s because %s",
-            suffix,
-            draft_group_id,
-            contest_type_id,
-            reason,
-        )
-        return True
+#     if reason:
+#         logger.debug(
+#             "Skipping (suffix: %s) dg: %s type: %s because %s",
+#             suffix,
+#             draft_group_id,
+#             contest_type_id,
+#             reason,
+#         )
+#         return True
 
-    return False
+#     return False
 
 
 def run(sport, writecsv=True):

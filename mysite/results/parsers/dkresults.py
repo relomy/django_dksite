@@ -80,7 +80,7 @@ def get_contest_data(contest_id):
             .find_all("span")
         )
         completed = info_header[3].string
-        logger.debug(int(info_header[4].string))
+        logger.debug("Positions paid: %s", int(info_header[4].string))
         if completed.strip().upper() == "COMPLETED":
             logger.debug("contest %s is completed", contest_id)
             DKContest.objects.update_or_create(
