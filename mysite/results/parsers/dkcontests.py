@@ -39,17 +39,16 @@ class Contest:
         self.entry_fee = contest["a"]
         self.entry_count = contest["ec"]
         self.max_entry_count = contest["mec"]
-        self.attr = contest["attr"]
         self.is_guaranteed = False
         self.is_double_up = False
 
         self.start_dt = self.get_dt_from_timestamp(self.start_date)
 
-        if "IsDoubleUp" in self.attr:
-            self.is_double_up = self.attr["IsDoubleUp"]
+        if "IsDoubleUp" in contest["attr"]:
+            self.is_double_up = contest["attr"]["IsDoubleUp"]
 
-        if "IsGuaranteed" in self.attr:
-            self.is_guaranteed = self.attr["IsGuaranteed"]
+        if "IsGuaranteed" in contest["attr"]:
+            self.is_guaranteed = contest["attr"]["IsGuaranteed"]
 
     @staticmethod
     def get_dt_from_timestamp(timestamp: str):

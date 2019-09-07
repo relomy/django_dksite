@@ -12,6 +12,7 @@
         <tr>
           <th class="th-sm">Player</th>
           <th class="th-sm">Pos</th>
+          <th class="th-sm">Salary</th>
           <th class="th-sm">Ownership</th>
           <th class="th-sm">Points</th>
         </tr>
@@ -21,6 +22,7 @@
         <tr>
           <td>{{ row.player.name }}</td>
           <td>{{ row.player.position }}</td>
+          <td>{{ row.player.salary|prepend_dollars }}</td>
           <td>{{ row.ownership|percentage }}</td>
           <td>{{ row.fpts }}</td>
         </tr>
