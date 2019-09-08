@@ -14,7 +14,7 @@
         <tbody>
         {% for contest in contests %}
             <tr>
-                <td>{{ contest.datetime|date:'D, M m Y @ H:i e' }}</td>
+                <td>{{ contest.datetime|date:'D, M d Y @ H:i e' }}</td>
                 <td><a class="text-default" href="/results/{{ contest.id }}">{{ contest.name }}</a></td>
                 <td>{{ contest.entries }}</td>
                 <td>{{ contest.results.count }}</td>
